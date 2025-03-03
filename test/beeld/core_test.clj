@@ -1,0 +1,2 @@
+(ns beeld.core-test)
+

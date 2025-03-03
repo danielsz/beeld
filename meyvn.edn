@@ -1,0 +1,20 @@
+{:pom {:group-id "org.danielsz"
+       :artifact-id "beeld"
+       :version "1.0.0"
+       :name "beeld"
+       :licenses [{:name "Eclipse Public License -v 1.0"
+                   :url "https://opensource.org/license/epl-1-0/"}]}
+ :packaging {:uberjar
+             {:enabled false
+              :build-properties {:main-class "beeld.core"}
+              :excludes {:artifacts ["org.clojure:google-closure-library" "com.google.javascript:closure-compiler"]
+                         :filters ["META-INF/*.SF" "META-INF/*.DSA" "META-INF/*.RSA"]}
+              :include-source false
+              :obfuscation {:enabled false}}
+             :jar {:enabled true}}
+ :interactive {:enabled true
+               :reload-on-save true
+               :repl-port :auto
+               :repl-host "127.0.0.1"
+               :repl-unix-socket "nrepl.socket"}
+ :distribution-management {:id "reposilite" :url "https://reposilite.tuppu.net/sapiens"}}
