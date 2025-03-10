@@ -9,7 +9,8 @@
            [java.nio.file Files]))
 
 (defprotocol Beeld
-  (file-size [x])
+  (filename [x])
+  (filesize [x])
   (->bytes [x])
   (->base64 [x])
   (detect-image-format [x])
@@ -17,7 +18,7 @@
 
 (extend-protocol Beeld
   File
-  (file-size [x]
+  (filesize [x]
     (.length x))
   (->bytes [x]
     (->bytes (io/input-stream x)))
@@ -27,19 +28,26 @@
     (detect-image-format (io/input-stream x)))
   (mime-type [x]
     (Files/probeContentType (.toPath x)))
+  (filename [x] (.getName x))
   URI
-  (file-size [x]
+  (filesize [x]
     (Long/parseLong (get-in (client/head (str x)) [:headers "Content-Length"])))
+  (filename [x] (filename (io/file (.getPath x))))
   URL
-  (file-size [x]
+  (filesize [x]
     (Long/parseLong (get-in (client/head (str x)) [:headers "Content-Length"])))
+  (filename [x] (filename (io/file (.getPath x))))
   (->bytes [x]
     (:body (client/get (str x) {:as :byte-array})))
   String
-  (file-size [x]
+  (filesize [x]
     (cond
-      (.exists (io/file x)) (file-size (io/file x))
-      (URL. x) (file-size (URL. x))))
+      (.exists (io/file x)) (filesize (io/file x))
+      (URL. x) (filesize (URL. x))))
+  (filename [x]
+    (cond
+      (.exists (io/file x)) (filename (io/file x))
+      (URL. x) (filename (URL. x))))
   (->bytes [x]
     (cond
       (.exists (io/file x)) (->bytes (io/input-stream x))
