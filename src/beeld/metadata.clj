@@ -1,6 +1,6 @@
 (ns beeld.metadata
   (:require [beeld.metadata-extractor.metadata :refer [metadata tags description]])
-  (:import [com.drew.metadata.exif ExifIFD0Directory ExifSubIFDDirectory]
+  (:import [com.drew.metadata.exif ExifIFD0Directory ExifSubIFDDirectory GpsDirectory]
            [com.drew.metadata.exif.makernotes FujifilmMakernoteDirectory]
            [com.drew.metadata.iptc IptcDirectory]
            [com.drew.metadata.jpeg JpegDirectory]
@@ -91,6 +91,14 @@
 (defn original-date [file]
   (when-let [directory (.getFirstDirectoryOfType (metadata file) ExifSubIFDDirectory)]
     (.getDate directory ExifSubIFDDirectory/TAG_DATETIME_ORIGINAL)))
+
+(defn geolocation [file]
+  (when-let [directory (.getFirstDirectoryOfType (metadata file) GpsDirectory)]
+    (.getGeoLocation directory)))
+
+(defn gps-date [file]
+  (when-let [directory (.getFirstDirectoryOfType (metadata file) GpsDirectory)]
+    (.getGpsDate directory)))
 
 (defn description-xmp [file]
   (when-let [directory (.getFirstDirectoryOfType (metadata file) XmpDirectory)]
