@@ -3,8 +3,8 @@
            [com.drew.metadata.xmp XmpDirectory]
            [clojure.lang Reflector]))
 
-(defn metadata [file]
-  (ImageMetadataReader/readMetadata file))
+(defn metadata [x]
+  (ImageMetadataReader/readMetadata x))
 
 (defn directories [metadata]
   (doseq [directory (.getDirectories metadata)]
