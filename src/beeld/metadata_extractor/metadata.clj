@@ -3,7 +3,9 @@
            [com.drew.metadata.xmp XmpDirectory]
            [clojure.lang Reflector]))
 
-(defn metadata [x]
+(defn metadata
+  "Accepts file or input-stream; upstream function is overloaded"
+  [x]
   (ImageMetadataReader/readMetadata x))
 
 (defn directories [metadata]

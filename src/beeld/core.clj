@@ -3,7 +3,9 @@
             [clj-http.client :as client]
             [kryptos.core :as crypto]
             [image-resizer.resize :refer [resize-fn]]
-            [image-resizer.scale-methods :refer [speed]])
+            [image-resizer.rotate :refer [rotate-90-counter-clockwise-fn]]
+            [image-resizer.scale-methods :refer [speed]]
+            [beeld.metadata :refer [orientation]])
   (:import [javax.imageio ImageIO]
            [java.net URI URL]
            [java.io File]
@@ -140,10 +142,13 @@
     ([x width height]
      (scale x width height speed))
     ([x width height quality]
-     (let [[a b] (clone x 2)
+     (let [[a b c] (clone x 3)
            image-format (first (detect-image-format a))
-           resize-f (resize-fn width height quality)
-           ^BufferedImage resized-image (resize-f b)]
+           transformation-f (case (orientation c)
+                              "Left side, bottom (Rotate 270 CW)" (comp (rotate-90-counter-clockwise-fn) (resize-fn width height quality))
+                              "Top, left side (Horizontal / normal)" (resize-fn width height quality)
+                              (resize-fn width height quality))
+           ^BufferedImage resized-image (transformation-f b)]
        (with-open [baos (java.io.ByteArrayOutputStream.)]
          (ImageIO/write resized-image image-format baos)
          (.toByteArray baos)))))

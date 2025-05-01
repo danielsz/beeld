@@ -24,6 +24,11 @@
   (when-let [directory (.getFirstDirectoryOfType (metadata file) ExifIFD0Directory)]
     (description (metadata file) (class directory) ExifIFD0Directory/TAG_COMPRESSION)))
 
+(defn orientation [file-or-is]
+  (let [metadata (metadata file-or-is)]
+    (when-let [directory (.getFirstDirectoryOfType metadata ExifIFD0Directory)]
+      (description metadata (class directory) ExifIFD0Directory/TAG_ORIENTATION))))
+
 (defn make [file]
   (when-let [directory (.getFirstDirectoryOfType (metadata file) ExifIFD0Directory)]
     (description (metadata file) (class directory) ExifIFD0Directory/TAG_MAKE)))
