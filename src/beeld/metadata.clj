@@ -103,14 +103,24 @@
   (let [metadata (metadata (io/input-stream x))]
     (reduce (fn [x y] (+ x (count y))) 0 (extractor/tags metadata))))
 
-(defn tags* [x]
+(defn tags**
+  "Sequence of Tag objects"
+  [x]
   (let [metadata (metadata (io/input-stream x))]
     (mapcat seq (extractor/tags metadata))))
 
-(defn tags [x]
-  (let [coll (->> (tags* x)
+(defn tags*
+  "Vector of maps"
+  [x]
+  (let [coll (->> (tags** x)
                 (group-by Tag/.getDirectoryName))
         f (fn [node] (if (instance? Tag node)
                       {(Tag/.getTagName node) (Tag/.getDescription node)}
                       node))]
     (postwalk f coll)))
+
+(defn tags
+  "Map of maps"
+  [x]
+  (let [coll (tags* x)]
+    (into {} (for [[k v] coll] [k (into {} v)]))))
