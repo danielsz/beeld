@@ -1,4 +1,4 @@
-{:deps {org.apache.commons/commons-imaging {:mvn/version "1.0.0-alpha5"}
+{:deps {org.apache.commons/commons-imaging {:mvn/version "1.0.0-alpha6"}
         com.drewnoakes/metadata-extractor {:mvn/version "2.19.0"}
         clj-http/clj-http {:mvn/version "3.13.0"}
         org.danielsz/kryptos {:mvn/version "0.1.8"}

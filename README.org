@@ -1,0 +1,5 @@
+* Beeld
+
+A tightly focused, delightful libary that will help you retrieve information from
+images.
+
