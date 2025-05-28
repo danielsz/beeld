@@ -1,15 +1,15 @@
 (ns beeld.metadata-extractor.metadata
   (:import [com.drew.imaging ImageMetadataReader]           
            [com.drew.metadata.xmp XmpDirectory]
-           [clojure.lang Reflector]
-           [java.io InputStream]))
+           [clojure.lang Reflector])
+  (:require
+    [clojure.java.io :as io]))
 
 (defn metadata
-  "Accepts file or input-stream; upstream function is overloaded"
+  "Accepts same arguments as io/input-stream"
   [x]
-  (let [metadata (ImageMetadataReader/readMetadata x)]
-    (when (instance? java.io.InputStream x) (.close x))
-    metadata))
+  (with-open [is (io/input-stream x)]
+    (ImageMetadataReader/readMetadata is)))
 
 (defn directories [metadata]
   (doseq [directory (.getDirectories metadata)]

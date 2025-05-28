@@ -1,6 +1,5 @@
 (ns beeld.metadata
   (:require [beeld.metadata-extractor.metadata :as extractor :refer [metadata description]]
-            [clojure.java.io :as io]
             [clojure.walk :refer [postwalk]])
   (:import [com.drew.metadata.exif ExifIFD0Directory ExifSubIFDDirectory GpsDirectory]
            [com.drew.metadata.exif.makernotes FujifilmMakernoteDirectory]
@@ -14,7 +13,7 @@
 (defmacro exif-tag
   "x can be any argument that clojure.java.io/input-stream supports, ie. InputStream, File, URI, URL, Socket, byte array, and String arguments. If the argument is a String, it tries to resolve it first as a URI, then as a local file name.  URIs with a 'file' protocol are converted to local file names."
   [x directory tag]
-  `(let [metadata# (metadata (io/input-stream ~x))]
+  `(let [metadata# (metadata ~x)]
     (when-let [directory# (.getFirstDirectoryOfType metadata# ~directory)]
       (description metadata# (class directory#) ~tag))))
 
@@ -86,27 +85,27 @@
   (exif-tag x IptcDirectory IptcDirectory/TAG_CAPTION))
 
 (defn geolocation [x]
-  (when-let [directory (.getFirstDirectoryOfType (metadata (io/input-stream x)) GpsDirectory)]
+  (when-let [directory (.getFirstDirectoryOfType (metadata x) GpsDirectory)]
     (.getGeoLocation directory)))
 
 (defn gps-date [x]
-  (when-let [directory (.getFirstDirectoryOfType (metadata (io/input-stream x)) GpsDirectory)]
+  (when-let [directory (.getFirstDirectoryOfType (metadata x) GpsDirectory)]
     (.getGpsDate directory)))
 
 (defn description-xmp [x]
-  (when-let [directory (.getFirstDirectoryOfType (metadata (io/input-stream x)) XmpDirectory)]
+  (when-let [directory (.getFirstDirectoryOfType (metadata x) XmpDirectory)]
     (let [path (filter #(= "dc:description[1]" (.getPath %)) (iterator-seq (.iterator (.getXMPMeta directory))))]
       (when (seq path)
         (.getValue (first path))))))
 
 (defn number-of-tags [x]
-  (let [metadata (metadata (io/input-stream x))]
+  (let [metadata (metadata x)]
     (reduce (fn [x y] (+ x (count y))) 0 (extractor/tags metadata))))
 
 (defn tags**
   "Sequence of Tag objects"
   [x]
-  (let [metadata (metadata (io/input-stream x))]
+  (let [metadata (metadata x)]
     (mapcat seq (extractor/tags metadata))))
 
 (defn tags*
