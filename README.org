@@ -1,5 +1,26 @@
 * Beeld
 
-A tightly focused, delightful libary that will help you retrieve information from
-images.
+A tightly focused, delightful library that retrieves metadata from
+images and some more. Two namespaces are meant for public consumption,
+~beeld.core~ and ~beeld.metadata~.
+
+** Metadata
+
+The most obvious function in the ~beeld.metadata~ is ~tags~, which will
+return a data structure (map of maps) with all the metadata available
+for the images. Since images can have extensive metadata, the map is
+organized around the metadata directories. Think about them as
+thematic groupings of information. Examples of such headings are ~Exif
+SubIFD~, ~File Type~, ~GPS~, etc.
+
+The argument to ~tags~ are the same arguments that
+~clojure.java.io/input-stream~ accepts: InputStream, File, URI, URL,
+byte array, String arguments. Likewise, a String argument gets first
+resolved as a URI, then as a local file name.
+
+The ~beeld.metadata~ offers convenience functions that retrieve only a
+particular metadata tag, for example ~mime-type~, ~lens~, ~make~,
+~orientation~, etc.
+
+
 
