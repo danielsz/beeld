@@ -37,6 +37,15 @@ The argument to ~tags~ are the same arguments that ~input-stream~ accepts:
 gets first resolved as a /URI/, then as a local file name. This means
 that you can ask about the metadata of images over the wire.
 
+#+begin_src clojure
+(require '[beeld.metadata :as meta])
+(meta/tags "path/to/your/image.jpg")
+;;or
+(meta/tags "https://somewhere.com/your/image.jpg")
+
+;; Returns a map of maps
+#+end_src
+
 The namespace ~beeld.metadata~ offers several convenience functions that
 retrieve a particular metadata tag, for example ~mime-type~, ~lens~, ~make~,
 ~orientation~, etc.
