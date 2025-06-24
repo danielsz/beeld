@@ -7,14 +7,17 @@ some more.
 
 ** Metadata
 
-Image formats embed standardized information about themselves. Several
-standards may coexist in the same image, for example Exif, IPTC, ICC
-and XMP. A special tag called /Makernote/ allows camera manufactures to
-add their proprietary tags. Over the years, software solutions for
-retrieving and preserving metadata have coalesced around a handful of
-flagship projects with Phil Harvey's [[Exiftool][Exiftool]] reigning supreme. For
-Java, the go-to solution is Drew Noakes's [[https://github.com/drewnoakes/metadata-extractor][metadata extractor]]. The
-current Clojure library depends on the latter.
+Image formats embed standardized information about
+themselves. Multiple information standards may coexist in the same
+image, for example Exif, IPTC, ICC and XMP. The Exif standard specify
+a special tag called /Makernote/ that allows camera manufactures to add
+their proprietary tags.
+
+Over the years, software solutions for retrieving and preserving
+metadata have coalesced around a handful of flagship projects with
+Phil Harvey's [[Exiftool][Exiftool]] reigning supreme. For Java, the go-to solution
+is Drew Noakes's [[https://github.com/drewnoakes/metadata-extractor][metadata extractor]]. This library depends on the
+latter.
 
 Two namespaces are meant for public consumption, ~beeld.core~ and
 ~beeld.metadata~.
@@ -22,8 +25,8 @@ Two namespaces are meant for public consumption, ~beeld.core~ and
 ** beeld.metadata
 
 Most users will need only the ~tags~ function, which accepts a filename
-and returns a data structure reflecting the metadata available for the
-images. Since images may have large amounts metadata, the data
+and returns a data structure reflecting the metadata associated with
+the image. Since images may have large amounts metadata, the data
 structure, a map of maps, is organized around standardized
 directories. Think about them as thematic groupings of
 information. Examples of such headings are ~Exif SubIFD~, ~File Type~,
@@ -43,10 +46,9 @@ retrieve a particular metadata tag, for example ~mime-type~, ~lens~, ~make~,
 ~beeld.core~ defines an interface geared towards low-level image
 manipulation. The namespace includes functions to convert images to
 base64, streams or byte arrays, very much in the spirit of Java
-I/O. Special mention for the scale function. The ~scale~ function in
-/beeld.core/ will honor the orientation tag found in the metada and
-resize the image accordingly. Something that Java's /ImageIO/ doesn't
-do.
+I/O. The ~scale~ function in /beeld.core/ will honor the orientation tag
+found in the metada and resize the image accordingly. Something that
+Java's /ImageIO/ doesn't do.
 
 ** Contributing
 
