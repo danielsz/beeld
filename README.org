@@ -53,6 +53,5 @@ Java's /ImageIO/ doesn't do.
 ** Contributing
 
 Additional convenience functions in the ~beeld.metadata~ namespace are
-welcome. Anything else will require preliminary discussion and
-vetting.
+welcome. Anything else requires preliminary discussion and vetting.
 
