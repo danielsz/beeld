@@ -25,7 +25,7 @@ Two namespaces are meant for public consumption, ~beeld.core~ and
 ** beeld.metadata
 
 Most users will need only the ~tags~ function, which accepts a filename
-and returns a data structure reflecting the metadata associated with
+and returns a data structure representing the metadata associated with
 the image. Since images may have large amounts metadata, the data
 structure, a map of maps, is organized around standardized
 directories. Think about them as thematic groupings of

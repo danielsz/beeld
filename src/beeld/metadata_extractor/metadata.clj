@@ -1,9 +1,8 @@
 (ns beeld.metadata-extractor.metadata
+  (:require [clojure.java.io :as io])
   (:import [com.drew.imaging ImageMetadataReader]           
            [com.drew.metadata.xmp XmpDirectory]
-           [clojure.lang Reflector])
-  (:require
-    [clojure.java.io :as io]))
+           [clojure.lang Reflector]))
 
 (defn metadata
   "Accepts same arguments as io/input-stream"
