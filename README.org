@@ -3,13 +3,12 @@
 * Beeld
 
 This library displays the metadata associated with images and does
-some more.
+some more. For example,
 
-Use cases:
-
-- Scaling an image in portrait mode or landscape mode based on its metadata. 
+- Scaling an image in portrait mode or landscape mode based on the
+  orientation EXIF tag.
 - Create a naming scheme for a photo library where parts of the name
-  come from data extracted from the metadata.
+  gets extracted from metadata.
 - Detect the format of an image so that the correct mime-type can be
   appended to the headers in a web service.
 
