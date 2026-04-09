@@ -7,7 +7,7 @@ some more.
 
 Use cases:
 
-- Scaling an image in portrait mode or landscape mode based their metadata. 
+- Scaling an image in portrait mode or landscape mode based on its metadata. 
 - Create a naming scheme for a photo library where parts of the name
   come from data extracted from the metadata.
 - Detect the format of an image so that the correct mime-type can be
