@@ -1,7 +1,6 @@
 (ns beeld.core
   (:require [clojure.java.io :as io]
             [clj-http.client :as client]
-            [kryptos.core :as crypto]
             [image-resizer.resize :refer [resize-fn]]
             [image-resizer.rotate :refer [rotate-90-counter-clockwise-fn]]
             [image-resizer.scale-methods :refer [speed]]
@@ -11,6 +10,7 @@
            [java.io File]
            [java.io BufferedInputStream ByteArrayOutputStream]
            [java.nio.file Files]
+           [java.util Base64]
            [java.awt.image BufferedImage]))
 
 (defprotocol Beeld
@@ -117,7 +117,7 @@
        :else (throw (ex-info "Cannot scale" {:input x})))))
 
   byte/1
-  (->base64 [x] (crypto/encode-base64 x))
+  (->base64 [x] (.encodeToString (Base64/getEncoder) x))
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
   (write
     ([x] (throw (ex-info "Cannot write byte array with 1-arity: no filename available. Use (write x dest) or (write x n dest)" {})))
