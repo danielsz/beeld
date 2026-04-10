@@ -1,4 +1,6 @@
-[[https://clojars.org/com.github.danielsz/beeld/latest-version.svg]]
+
+[[https://clojars.org/com.github.danielsz/beeld][https://img.shields.io/clojars/v/com.github.danielsz/beeld.svg]]
+
 
 * Beeld
 
