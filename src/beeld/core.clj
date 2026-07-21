@@ -4,7 +4,7 @@
             [image-resizer.resize :refer [resize-fn]]
             [image-resizer.rotate :refer [rotate-90-counter-clockwise-fn]]
             [image-resizer.scale-methods :refer [speed]]
-            [beeld.metadata :refer [orientation image-width image-height]])
+            [beeld.metadata :as metadata :refer [orientation]])
   (:import [javax.imageio ImageIO]
            [java.net URI URL]
            [java.io File]
@@ -16,6 +16,8 @@
 (defprotocol Beeld
   (filename [x])
   (filesize [x])
+  (image-width [x])
+  (image-height [x])
   (aspect-ratio [x])
   (->bytes [x])
   (->base64 [x])
@@ -37,6 +39,8 @@
 (extend-protocol Beeld
   File
   (filesize [x] (.length x))
+  (image-width [x] (metadata/image-width x))
+  (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (->bytes [x] (->bytes (io/input-stream x)))
   (->base64 [x] (->base64 (->bytes x)))
@@ -55,6 +59,8 @@
 
   URI
   (filesize [x] (Long/parseLong (get-in (client/head (str x)) [:headers "Content-Length"])))
+  (image-width [x] (metadata/image-width x))
+  (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (filename [x] (filename (io/file (.getPath x))))
   (->bytes [x] (->bytes (.toURL x)))
@@ -72,6 +78,8 @@
   URL
   (filename [x] (filename (io/file (.getPath x))))
   (filesize [x] (Long/parseLong (get-in (client/head (str x)) [:headers "Content-Length"])))
+  (image-width [x] (metadata/image-width x))
+  (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (->bytes [x] (:body (client/get (str x) {:as :byte-array})))
   (mime-type [x] (-> x .openConnection .getContentType))
@@ -95,6 +103,8 @@
       (.exists (io/file x)) (filesize (io/file x))
       (url-string? x) (filesize (URL. x))
       :else (throw (ex-info "Cannot determine filesize" {:input x}))))
+  (image-width [x] (metadata/image-width x))
+  (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (->bytes [x]
     (cond
@@ -123,6 +133,8 @@
        :else (throw (ex-info "Cannot scale" {:input x})))))
 
   byte/1
+  (image-width [x] (metadata/image-width x))
+  (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (->base64 [x] (.encodeToString (Base64/getEncoder) x))
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
