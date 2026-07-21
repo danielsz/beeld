@@ -4,7 +4,7 @@
             [image-resizer.resize :refer [resize-fn]]
             [image-resizer.rotate :refer [rotate-90-counter-clockwise-fn]]
             [image-resizer.scale-methods :refer [speed]]
-            [beeld.metadata :refer [orientation]])
+            [beeld.metadata :refer [orientation image-width image-height]])
   (:import [javax.imageio ImageIO]
            [java.net URI URL]
            [java.io File]
@@ -16,6 +16,7 @@
 (defprotocol Beeld
   (filename [x])
   (filesize [x])
+  (aspect-ratio [x])
   (->bytes [x])
   (->base64 [x])
   (detect-image-format [x])
@@ -36,11 +37,13 @@
 (extend-protocol Beeld
   File
   (filesize [x] (.length x))
+  (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (->bytes [x] (->bytes (io/input-stream x)))
   (->base64 [x] (->base64 (->bytes x)))
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
   (mime-type [x] (Files/probeContentType (.toPath x)))
   (filename [x] (.getName x))
+  (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (write
     ([x] (write x (System/getProperty "java.io.tmpdir")))
     ([x dest] (write x (filename x) dest))
@@ -52,6 +55,7 @@
 
   URI
   (filesize [x] (Long/parseLong (get-in (client/head (str x)) [:headers "Content-Length"])))
+  (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (filename [x] (filename (io/file (.getPath x))))
   (->bytes [x] (->bytes (.toURL x)))
   (->base64 [x] (->base64 (.toURL x)))
@@ -66,8 +70,9 @@
     ([x width height] (scale x width height speed))
     ([x width height quality] (scale (.toURL x) width height quality)))
   URL
-  (filesize [x] (Long/parseLong (get-in (client/head (str x)) [:headers "Content-Length"])))
   (filename [x] (filename (io/file (.getPath x))))
+  (filesize [x] (Long/parseLong (get-in (client/head (str x)) [:headers "Content-Length"])))
+  (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (->bytes [x] (:body (client/get (str x) {:as :byte-array})))
   (mime-type [x] (-> x .openConnection .getContentType))
   (write
@@ -80,16 +85,17 @@
     ([x width height quality] (scale (:body (client/get (str x) {:as :byte-array})) width height quality)))
 
   String
-  (filesize [x]
-    (cond
-      (.exists (io/file x)) (filesize (io/file x))
-      (url-string? x) (filesize (URL. x))
-      :else (throw (ex-info "Cannot determine filesize" {:input x}))))
   (filename [x]
     (cond
       (.exists (io/file x)) (filename (io/file x))
       (url-string? x) (filename (URL. x))
       :else (throw (ex-info "Cannot determine filename" {:input x}))))
+  (filesize [x]
+    (cond
+      (.exists (io/file x)) (filesize (io/file x))
+      (url-string? x) (filesize (URL. x))
+      :else (throw (ex-info "Cannot determine filesize" {:input x}))))
+  (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (->bytes [x]
     (cond
       (.exists (io/file x)) (->bytes (io/input-stream x))
@@ -117,6 +123,7 @@
        :else (throw (ex-info "Cannot scale" {:input x})))))
 
   byte/1
+  (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (->base64 [x] (.encodeToString (Base64/getEncoder) x))
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
   (write

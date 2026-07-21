@@ -98,6 +98,12 @@
       (when (seq path)
         (.getValue (first path))))))
 
+(defn image-width [x]
+  (extractor/get-tag-by-name x "Image Width"))
+
+(defn image-height [x]
+  (extractor/get-tag-by-name x "Image Height"))
+
 (defn number-of-tags [x]
   (let [metadata (metadata x)]
     (reduce (fn [x y] (+ x (count y))) 0 (extractor/tags metadata))))
