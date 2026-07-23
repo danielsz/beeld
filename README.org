@@ -4,11 +4,23 @@
 
 * Beeld
 
-This library displays the metadata associated with images and does
-some more. For example,
+Beeld is a Clojure library for reading and writing image metadata. It
+also provides image scaling (with EXIF orientation awareness), format
+detection, and I/O utilities. It works transparently with local files,
+remote URLs, and in-memory byte arrays.
 
-- Scaling an image in portrait mode or landscape mode based on the
-  orientation EXIF tag.
+*Highlights:*
+
+- Read EXIF, IPTC, XMP, ICC, and GPS metadata from JPEG and other
+  image formats.
+- Write IPTC captions, keywords, EXIF descriptions, and XMP data.
+- Detect image format and MIME type.
+- Convert images to byte arrays or Base64-encoded strings.
+
+This enables use cases such as: 
+
+- Scale images respecting the EXIF orientation tag (something Java's
+  ImageIO does not do).
 - Create a naming scheme for a photo library where parts of the name
   gets extracted from metadata.
 - Detect the format of an image so that the correct mime-type can be
@@ -16,57 +28,278 @@ some more. For example,
 
 ** Metadata
 
-Image formats embed standardized information about
-themselves. Multiple information standards may coexist in the same
-image, for example Exif, IPTC, ICC and XMP. The Exif standard specify
-a special tag called /Makernote/ that allows camera manufactures to add
-their proprietary tags.
+Image formats embed standardized information about themselves.
+Multiple information standards may coexist in the same image, for
+example EXIF, IPTC, ICC and XMP. The EXIF standard specifies a special
+tag called /Makernote/ that allows camera manufacturers to add their
+proprietary tags.
 
 Over the years, software solutions for retrieving and preserving
-metadata have coalesced around a handful of flagship projects with
-Phil Harvey's [[Exiftool][Exiftool]] reigning supreme. For Java, the go-to solution
-is Drew Noakes's [[https://github.com/drewnoakes/metadata-extractor][metadata extractor]]. This library depends on the
-latter.
+metadata have coalesced around a handful of flagship projects, with
+Phil Harvey's [[https://exiftool.org/][Exiftool]] reigning supreme. For Java, the go-to
+solution is Drew Noakes's [[https://github.com/drewnoakes/metadata-extractor][metadata extractor]]. This library depends
+on the latter for reading and on Apache Commons Imaging for writing.
 
-Two namespaces are meant for public consumption, ~beeld.core~ and
-~beeld.metadata~.
+Most users will only need the ~beeld.core~ namespace.
 
-** beeld.metadata
+** beeld.core
 
-Most users will need only the ~tags~ function, which accepts a filename
-and returns a data structure representing the metadata associated with
-the image. Since images may have large amounts metadata, the data
-structure, a map of maps, is organized around standardized
-directories. Think about them as thematic groupings of
-information. Examples of such headings are ~Exif SubIFD~, ~File Type~,
-~GPS~, etc.
+~beeld.core~ defines the =Beeld= protocol with methods that accept the
+same arguments as ~clojure.java.io/input-stream~: ~File~, ~URI~,
+~URL~, ~byte-array~, ~InputStream~, and ~String~. A string argument is
+resolved first as a URI, then as a local file name. This means you can
+query metadata of images over the wire.
 
-The argument to ~tags~ are the same arguments that ~input-stream~ accepts:
-/InputStream/, /File/, /URI/, /URL/, byte array, strings. A string argument
-gets first resolved as a /URI/, then as a local file name. This means
-that you can ask about the metadata of images over the wire.
+*** Reading metadata
 
 #+begin_src clojure
-(require '[beeld.metadata :as meta])
-(meta/tags "path/to/your/image.jpg")
+(require '[beeld.core :as beeld])
+;; All metadata, returned as a map of directories → maps of tag-name → value
+(beeld/exif-tags "path/to/your/image.jpg")
 ;;or
-(meta/tags "https://somewhere.com/your/image.jpg")
+(beeld/exif-tags "https://somewhere.com/your/image.jpg")
+
+;; A single tag by name
+(beeld/exif-tag "path/to/your/image.jpg" "Image Width")
 
 ;; Returns a map of maps
 #+end_src
 
-The namespace ~beeld.metadata~ offers several convenience functions that
-retrieve a particular metadata tag, for example ~mime-type~, ~lens~, ~make~,
-~orientation~, etc.
+The data structure returned by ~exif-tags~ is a map of maps organized
+around standardized directories — thematic groupings of information
+such as ~Exif SubIFD~, ~File Type~, ~GPS~, etc.
 
-** beeld.core
+*** Image properties
 
-~beeld.core~ defines an interface geared towards low-level image
-manipulation. The namespace includes functions to convert images to
-base64, streams or byte arrays, very much in the spirit of Java
-I/O. The ~scale~ function in /beeld.core/ will honor the orientation tag
-found in the metada and resize the image accordingly. Something that
-Java's /ImageIO/ doesn't do.
+#+begin_src clojure
+(beeld/image-width "photo.jpg")   ;; => 4032
+(beeld/image-height "photo.jpg")  ;; => 3024
+(beeld/aspect-ratio "photo.jpg")  ;; => 4/3
+(beeld/filesize "photo.jpg")      ;; => 2847631 (bytes, works on URLs too)
+(beeld/filename "photo.jpg")      ;; => "photo.jpg"
+#+end_src
+
+*** Scaling
+
+~scale~ resizes an image and returns a byte array. It reads the EXIF
+orientation tag and rotates the image accordingly — something Java's
+ImageIO does not do.
+
+#+begin_src clojure
+;; Default: 750×750 pixels
+(beeld/scale "photo.jpg")
+
+;; Explicit dimensions
+(beeld/scale "photo.jpg" 1024 768)
+
+;; With quality setting (defaults to :speed)
+(beeld/scale "photo.jpg" 1024 768 :ultra-quality)
+#+end_src
+
+*** Format and MIME type
+
+#+begin_src clojure
+(beeld/detect-image-format "photo.jpg")   ;; => ["JPEG"]
+(beeld/mime-type "photo.jpg")             ;; => "image/jpeg"
+#+end_src
+
+*** I/O utilities
+
+#+begin_src clojure
+;; Convert image to byte array
+(beeld/->bytes "photo.jpg")
+
+;; Convert image to Base64 string (e.g. for HTML data URIs)
+(beeld/->base64 "photo.jpg")
+
+;; Write to a destination
+(beeld/write image-bytes "/tmp/copy.jpg")             ;; 2-arity: exact path
+(beeld/write "photo.jpg" "copy.jpg" "/tmp/")          ;; 3-arity: name + dir
+(beeld/write "photo.jpg")                             ;; 1-arity: writes to system tmpdir
+#+end_src
+
+*** Full protocol reference
+
+All methods of the =Beeld= protocol:
+
+| Method              |   Arity | Description                                                   |
+|---------------------+---------+---------------------------------------------------------------|
+| ~filename~            |       1 | Returns filename as a string                                  |
+| ~filesize~            |       1 | Returns file size in bytes (Content-Length for URLs)          |
+| ~image-width~         |       1 | Image width in pixels                                         |
+| ~image-height~        |       1 | Image height in pixels                                        |
+| ~aspect-ratio~        |       1 | Width divided by height                                       |
+| ~exif-tags~           |       1 | All metadata as a nested map                                  |
+| ~exif-tag~            |       2 | Single tag value by name                                      |
+| ~->bytes~             |       1 | Image content as a byte array                                 |
+| ~->base64~            |       1 | Image content as a Base64-encoded string                      |
+| ~detect-image-format~ |       1 | Returns list of detected format names (e.g. ["JPEG"])         |
+| ~mime-type~           |       1 | Returns MIME type string                                      |
+| ~write~               | 1, 2, 3 | Writes image to a file or directory                           |
+| ~scale~               | 1, 2, 3 | Scales image with orientation correction                      |
+| ~clone~               |       2 | Creates n independent InputStreams from a BufferedInputStream |
+
+
+** beeld.metadata
+
+~beeld.metadata~ offers targeted convenience functions that are more
+performant than searching by tag name. They read directly from known
+metadata directories using Java class references.
+
+*** Camera info
+
+#+begin_src clojure
+(require '[beeld.metadata :as m])
+
+(m/make "photo.jpg")        ;; => "FUJIFILM"
+(m/model "photo.jpg")       ;; => "X-T3"
+#+end_src
+
+*** Lens info
+
+#+begin_src clojure
+(m/lens "photo.jpg")               ;; => "XF35mmF1.4 R"
+(m/lens-make "photo.jpg")          ;; => "FUJIFILM"
+(m/lens-model "photo.jpg")         ;; => "XF35mmF1.4 R"
+(m/lens-specification "photo.jpg") ;; => "35mm f/1.4"
+(m/focal-length "photo.jpg")       ;; => "35.0 mm"
+#+end_src
+
+*** Exposure
+
+#+begin_src clojure
+(m/aperture "photo.jpg")       ;; => "f/5.6"
+(m/fnumber "photo.jpg")        ;; => "f/5.6"
+(m/shutter-speed "photo.jpg")  ;; => "1/500"
+(m/exposure-time "photo.jpg")  ;; => "1/500"
+(m/iso "photo.jpg")            ;; => "ISO 200"
+(m/compression "photo.jpg")    ;; => "JPEG (old-style)"
+#+end_src
+
+*** Orientation and image properties
+
+#+begin_src clojure
+(m/orientation "photo.jpg")             ;; => "Top, left side (Horizontal / normal)"
+(m/image-width "photo.jpg")             ;; => "4032"
+(m/image-height "photo.jpg")            ;; => "3024"
+(m/mime-type "photo.jpg")               ;; => "image/jpeg"
+(m/compression-type "photo.jpg")        ;; => "Baseline"
+(m/data-precision "photo.jpg")          ;; => "8 bits"
+(m/number-of-tags "photo.jpg")          ;; => 142
+#+end_src
+
+*** Dates
+
+#+begin_src clojure
+(m/original-date "photo.jpg")  ;; => #inst "2024-01-15T10:30:00"
+#+end_src
+
+*** Descriptions and captions
+
+#+begin_src clojure
+(m/description-exif "photo.jpg")   ;; EXIF image description
+(m/description-xmp "photo.jpg")    ;; XMP dc:description
+(m/caption "photo.jpg")            ;; IPTC caption
+(m/filename "photo.jpg")           ;; filename from filesystem metadata
+#+end_src
+
+*** GPS
+
+#+begin_src clojure
+(m/geolocation "photo.jpg")  ;; => GeoLocation object with latitude/longitude
+(m/gps-date "photo.jpg")     ;; => GPS timestamp as java.util.Date
+#+end_src
+
+*** Fujifilm film simulation
+
+#+begin_src clojure
+(m/simulation "photo.jpg")   ;; => "Classic Chrome"
+#+end_src
+
+*** Tag access at different levels
+
+#+begin_src clojure
+(m/tags "photo.jpg")    ;; Map of maps: {"Directory" {"Tag" "Value"}}
+(m/tags* "photo.jpg")   ;; Vector of maps, grouped by directory
+(m/tags** "photo.jpg")  ;; Sequence of raw Tag objects (metadata-extractor)
+#+end_src
+
+*** Complete function list
+
+| Function           | Description                                   |
+|--------------------+-----------------------------------------------|
+| ~aperture~           | Lens aperture (e.g. "f/5.6")                  |
+| ~caption~            | IPTC caption                                  |
+| ~compression~        | EXIF compression type                         |
+| ~compression-type~   | JPEG compression type                         |
+| ~data-precision~     | JPEG data precision (bits)                    |
+| ~description-exif~   | EXIF image description                        |
+| ~description-xmp~    | XMP dc:description                            |
+| ~exif-tag~ (macro)   | Low-level: tag by directory class + tag const |
+| ~exposure-time~      | Exposure time (e.g. "1/500")                  |
+| ~filename~           | Filename from filesystem metadata             |
+| ~fnumber~            | F-number (e.g. "f/5.6")                       |
+| ~focal-length~       | Focal length (e.g. "35.0 mm")                 |
+| ~geolocation~        | GPS GeoLocation object                        |
+| ~get-tag-by-name~    | Search all tags by name                       |
+| ~gps-date~           | GPS timestamp                                 |
+| ~image-height~       | Image height                                  |
+| ~image-width~        | Image width                                   |
+| ~iso~                | ISO speed rating                              |
+| ~lens~               | Lens name                                     |
+| ~lens-make~          | Lens manufacturer                             |
+| ~lens-model~         | Lens model                                    |
+| ~lens-specification~ | Lens specification (e.g. "35mm f/1.4")        |
+| ~make~               | Camera make                                   |
+| ~mime-type~          | Detected MIME type                            |
+| ~model~              | Camera model                                  |
+| ~number-of-tags~     | Total tag count across all directories        |
+| ~orientation~        | EXIF orientation                              |
+| ~original-date~      | Original date/time as java.util.Date          |
+| ~shutter-speed~      | Shutter speed (e.g. "1/500")                  |
+| ~simulation~         | Fujifilm film simulation mode                 |
+| ~tags~               | All metadata as map of maps                   |
+| ~tags*~              | All metadata as vector of maps                |
+| ~tags**~             | All metadata as seq of Tag objects            |
+
+** Metadata Writing
+
+~beeld.metadata-extractor.writer~ writes metadata to JPEG files using
+Apache Commons Imaging. All functions write to a /new file/ rather
+than modifying the original.
+
+#+begin_src clojure
+(require '[beeld.metadata-extractor.writer :as w])
+
+;; Write an IPTC caption
+(w/write-iptc-caption "photo.jpg" "photo-tagged.jpg" "A beautiful sunset over the harbor")
+
+;; Write IPTC caption and keywords
+(w/write-iptc-caption-and-keywords "photo.jpg" "photo-tagged.jpg"
+  "A beautiful sunset" "#sunset, #harbor, #golden-hour")
+
+;; Write arbitrary IPTC fields
+(w/write-iptc-fields "photo.jpg" "photo-tagged.jpg"
+  [[IptcTypes/CAPTION_ABSTRACT "A caption"]
+   [IptcTypes/COPYRIGHT_NOTICE "© 2024 Jane Doe"]])
+
+;; Write an EXIF image description
+(w/write-exif-description "photo.jpg" "photo-tagged.jpg" "Sunset over the harbor at low tide")
+
+;; Preserve XMP data when rewriting
+(w/write-xmp "photo.jpg" "photo-tagged.jpg")
+#+end_src
+
+
+| Function                        | Description                                      |
+|---------------------------------+--------------------------------------------------|
+| ~write-iptc~                      | Write IPTC records and raw blocks                |
+| ~write-iptc-fields~               | Append IPTC fields, preserving existing metadata |
+| ~write-iptc-caption~              | Convenience: write CAPTION_ABSTRACT               |
+| ~write-iptc-caption-and-keywords~ | Write caption and keywords in one call           |
+| ~write-exif-description~          | Write ImageDescription EXIF tag                  |
+| ~write-xmp~                       | Preserve XMP XML data to new file                |
+
 
 ** Contributing
 

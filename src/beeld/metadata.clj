@@ -75,7 +75,7 @@
 (defn description-exif [x]
   (exif-tag x ExifIFD0Directory ExifIFD0Directory/TAG_IMAGE_DESCRIPTION))
 
-(defn compresion-type [x]
+(defn compression-type [x]
   (exif-tag x JpegDirectory JpegDirectory/TAG_COMPRESSION_TYPE))
 
 (defn data-precision [x]
@@ -98,11 +98,13 @@
       (when (seq path)
         (.getValue (first path))))))
 
+(def get-tag-by-name extractor/get-tag-by-name)
+
 (defn image-width [x]
-  (extractor/get-tag-by-name x "Image Width"))
+  (get-tag-by-name x "Image Width"))
 
 (defn image-height [x]
-  (extractor/get-tag-by-name x "Image Height"))
+  (get-tag-by-name x "Image Height"))
 
 (defn number-of-tags [x]
   (let [metadata (metadata x)]

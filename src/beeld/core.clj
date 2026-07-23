@@ -19,6 +19,8 @@
   (image-width [x])
   (image-height [x])
   (aspect-ratio [x])
+  (exif-tags [x])
+  (exif-tag [x tag])
   (->bytes [x])
   (->base64 [x])
   (detect-image-format [x])
@@ -42,6 +44,8 @@
   (image-width [x] (metadata/image-width x))
   (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
+  (exif-tags [x] (metadata/tags x))
+  (exif-tag [x tag] (metadata/get-tag-by-name x tag))
   (->bytes [x] (->bytes (io/input-stream x)))
   (->base64 [x] (->base64 (->bytes x)))
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
@@ -62,6 +66,8 @@
   (image-width [x] (metadata/image-width x))
   (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
+  (exif-tags [x] (metadata/tags x))
+  (exif-tag [x tag] (metadata/get-tag-by-name x tag))
   (filename [x] (filename (io/file (.getPath x))))
   (->bytes [x] (->bytes (.toURL x)))
   (->base64 [x] (->base64 (.toURL x)))
@@ -81,6 +87,8 @@
   (image-width [x] (metadata/image-width x))
   (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
+  (exif-tags [x] (metadata/tags x))
+  (exif-tag [x tag] (metadata/get-tag-by-name x tag))
   (->bytes [x] (:body (client/get (str x) {:as :byte-array})))
   (mime-type [x] (-> x .openConnection .getContentType))
   (write
@@ -106,6 +114,8 @@
   (image-width [x] (metadata/image-width x))
   (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
+  (exif-tags [x] (metadata/tags x))
+  (exif-tag [x tag] (metadata/get-tag-by-name x tag))
   (->bytes [x]
     (cond
       (.exists (io/file x)) (->bytes (io/input-stream x))
@@ -136,6 +146,8 @@
   (image-width [x] (metadata/image-width x))
   (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
+  (exif-tags [x] (metadata/tags x))
+  (exif-tag [x tag] (metadata/get-tag-by-name x tag))
   (->base64 [x] (.encodeToString (Base64/getEncoder) x))
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
   (write
