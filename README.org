@@ -82,8 +82,7 @@ such as ~Exif SubIFD~, ~File Type~, ~GPS~, etc.
 *** Scaling
 
 ~scale~ resizes an image and returns a byte array. It reads the EXIF
-orientation tag and rotates the image accordingly — something Java's
-ImageIO does not do.
+orientation tag and rotates the image accordingly.
 
 #+begin_src clojure
 ;; Default: 750×750 pixels
