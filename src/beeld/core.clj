@@ -124,7 +124,10 @@
   (->base64 [x] (->base64 (->bytes x)))
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
   (mime-type [x]
-    (when (.exists (io/file x)) (Files/probeContentType (.toPath (io/file x)))))
+    (cond
+      (.exists (io/file x)) (mime-type (io/file x))
+      (url-string? x)       (mime-type (URL. x))
+      :else                 nil))
   (write
     ([x] (write x (System/getProperty "java.io.tmpdir")))
     ([x dest] (write x (filename x) dest))
