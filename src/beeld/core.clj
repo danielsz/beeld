@@ -51,7 +51,6 @@
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
   (mime-type [x] (Files/probeContentType (.toPath x)))
   (filename [x] (.getName x))
-  (aspect-ratio [x] (/ (image-width x) (image-height x)))
   (write
     ([x] (write x (System/getProperty "java.io.tmpdir")))
     ([x dest] (write x (filename x) dest))
@@ -87,8 +86,10 @@
   (image-width [x] (metadata/image-width x))
   (image-height [x] (metadata/image-height x))
   (aspect-ratio [x] (/ (image-width x) (image-height x)))
+  (->base64 [x] (->base64 (->bytes x)))
   (exif-tags [x] (metadata/tags x))
   (exif-tag [x tag] (metadata/get-tag-by-name x tag))
+  (detect-image-format [x] (detect-image-format (io/input-stream x)))
   (->bytes [x] (:body (client/get (str x) {:as :byte-array})))
   (mime-type [x] (-> x .openConnection .getContentType))
   (write
@@ -152,6 +153,9 @@
   (exif-tags [x] (metadata/tags x))
   (exif-tag [x tag] (metadata/get-tag-by-name x tag))
   (->base64 [x] (.encodeToString (Base64/getEncoder) x))
+  (->bytes [x] x)
+  (filesize [x] (alength x))
+  (mime-type [x] (metadata/mime-type x))
   (detect-image-format [x] (detect-image-format (io/input-stream x)))
   (write
     ([x] (throw (ex-info "Cannot write byte array with 1-arity: no filename available. Use (write x dest) or (write x n dest)" {})))
