@@ -85,7 +85,10 @@
       (io/delete-file f)))
   (testing "String invalid throws"
     (is (thrown? clojure.lang.ExceptionInfo
-                 (sut/filesize "not-a-file-or-url")))))
+                 (sut/filesize "not-a-file-or-url"))))
+  (testing "byte array"
+    (let [content (create-test-png)]
+      (is (= (alength content) (sut/filesize content))))))
 
 ;;; ->bytes
 
@@ -104,7 +107,10 @@
       (io/delete-file f)))
   (testing "String invalid throws"
     (is (thrown? clojure.lang.ExceptionInfo
-                 (sut/->bytes "not-a-file-or-url")))))
+                 (sut/->bytes "not-a-file-or-url"))))
+  (testing "byte array identity"
+    (let [content (create-test-png)]
+      (is (identical? content (sut/->bytes content))))))
 
 ;;; ->base64
 
@@ -126,6 +132,16 @@
     (let [f (io/file test-dir "test_fmt.png")]
       (write-test-file f (create-test-png))
       (is (= ["png"] (map str/lower-case (sut/detect-image-format f))))
+      (io/delete-file f)))
+  (testing "URL file"
+    (let [f (io/file test-dir "test_fmt_url.png")]
+      (write-test-file f (create-test-png))
+      (is (= ["png"] (map str/lower-case (sut/detect-image-format (io/as-url f)))))
+      (io/delete-file f)))
+  (testing "URI file"
+    (let [f (io/file test-dir "test_fmt_uri.png")]
+      (write-test-file f (create-test-png))
+      (is (= ["png"] (map str/lower-case (sut/detect-image-format (.toURI f)))))
       (io/delete-file f))))
 
 ;;; mime-type
@@ -140,7 +156,11 @@
     (let [f (str test-dir "test_mime_str.png")]
       (write-test-file f (create-test-png))
       (is (some? (sut/mime-type f)))
-      (io/delete-file f))))
+      (io/delete-file f)))
+  (testing "byte array PNG"
+    (is (= "image/png" (sut/mime-type (create-test-png)))))
+  (testing "byte array JPG"
+    (is (= "image/jpeg" (sut/mime-type (create-test-jpg))))))
 
 ;;; write
 
